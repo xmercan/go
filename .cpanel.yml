@@ -1,0 +1,40 @@
+---
+deployment:
+  tasks:
+    # Hedef dizin (cPanel kullanıcı adınıza göre değiştirin)
+    - export DEPLOYPATH=/home/$USER/public_html
+
+    # Kaynak dosyaları hedefe kopyala (hassas dosyalar ve dizinler hariç)
+    - /bin/rsync -a
+      --exclude='.git'
+      --exclude='.gitignore'
+      --exclude='.env'
+      --exclude='storage/logs'
+      --exclude='storage/backups'
+      --exclude='storage/cache'
+      --exclude='storage/installed.lock'
+      --exclude='uploads'
+      --exclude='install/diag.php'
+      --exclude='node_modules'
+      . $DEPLOYPATH/
+
+    # Yazılabilir dizinler için izinleri düzelt
+    - /bin/mkdir -p $DEPLOYPATH/storage/logs
+    - /bin/mkdir -p $DEPLOYPATH/storage/cache
+    - /bin/mkdir -p $DEPLOYPATH/storage/backups
+    - /bin/mkdir -p $DEPLOYPATH/storage/exports
+    - /bin/mkdir -p $DEPLOYPATH/storage/sandbox
+    - /bin/mkdir -p $DEPLOYPATH/uploads
+
+    - /bin/chmod 755 $DEPLOYPATH/storage
+    - /bin/chmod 755 $DEPLOYPATH/storage/logs
+    - /bin/chmod 755 $DEPLOYPATH/storage/cache
+    - /bin/chmod 755 $DEPLOYPATH/storage/backups
+    - /bin/chmod 755 $DEPLOYPATH/storage/exports
+    - /bin/chmod 755 $DEPLOYPATH/storage/sandbox
+    - /bin/chmod 755 $DEPLOYPATH/uploads
+
+    # Deploy sonrası cache temizle
+    - /usr/bin/php $DEPLOYPATH/deploy/post-deploy.php
+
+    - echo "=== GO! Deploy tamamlandi: $(date) ==="

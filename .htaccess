@@ -1,0 +1,125 @@
+# Dizin listelemeyi kapat (IfModule ile güvenli)
+<IfModule mod_autoindex.c>
+    Options -Indexes
+</IfModule>
+
+# ─── Rewrite Engine ──────────────────────────────────────────────────────────
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteBase /
+
+    # Install guard: installed.lock yoksa /install/ yönlendir
+    RewriteCond %{REQUEST_URI} !^/install
+    RewriteCond %{DOCUMENT_ROOT}/storage/installed.lock !-f
+    RewriteRule ^ /install/ [R=302,L]
+
+    # install/ dizinine doğrudan erişim izni (kendi index.php'si var)
+    RewriteCond %{REQUEST_URI} ^/install
+    RewriteRule ^ - [L]
+
+    # Mevcut dosya veya klasöre izin ver
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+
+    # Front controller
+    RewriteRule ^ index.php [QSA,L]
+</IfModule>
+
+# ─── Güvenlik: Gizli dosyalar ────────────────────────────────────────────────
+<FilesMatch "^\.">
+    <IfModule mod_authz_core.c>
+        Require all denied
+    </IfModule>
+    <IfModule !mod_authz_core.c>
+        Order allow,deny
+        Deny from all
+    </IfModule>
+</FilesMatch>
+
+# .env erişim engeli
+<Files ".env">
+    <IfModule mod_authz_core.c>
+        Require all denied
+    </IfModule>
+    <IfModule !mod_authz_core.c>
+        Order allow,deny
+        Deny from all
+    </IfModule>
+</Files>
+
+# config.php doğrudan erişim engeli
+<Files "config.php">
+    <IfModule mod_authz_core.c>
+        Require all denied
+    </IfModule>
+    <IfModule !mod_authz_core.c>
+        Order allow,deny
+        Deny from all
+    </IfModule>
+</Files>
+
+# ─── Storage ve hassas klasörler ─────────────────────────────────────────────
+<IfModule mod_alias.c>
+    RedirectMatch 403 ^/storage/.*$
+    RedirectMatch 403 ^/database/.*$
+    RedirectMatch 403 ^/core/.*$
+    RedirectMatch 403 ^/helpers/.*$
+    RedirectMatch 403 ^/services/.*$
+    RedirectMatch 403 ^/models/.*$
+    RedirectMatch 403 ^/controllers/.*$
+    RedirectMatch 403 ^/routes/.*$
+    RedirectMatch 403 ^/events/.*$
+    RedirectMatch 403 ^/jobs/.*$
+    RedirectMatch 403 ^/repositories/.*$
+    RedirectMatch 403 ^/integrations/.*$
+    RedirectMatch 403 ^/cli/.*$
+    RedirectMatch 403 ^/updates/.*$
+    RedirectMatch 403 ^/deploy/.*$
+</IfModule>
+
+# ─── Uploads: PHP çalıştırma engeli ─────────────────────────────────────────
+<IfModule mod_php8.c>
+    <FilesMatch "\.(php|php3|php4|php5|php7|php8|phtml|phar)$">
+        # uploads/ altında php engine kapalı olacak
+        # Bu kural /uploads/.htaccess ile de uygulanır
+    </FilesMatch>
+</IfModule>
+
+# ─── Güvenlik başlıkları ─────────────────────────────────────────────────────
+<IfModule mod_headers.c>
+    Header always set X-Frame-Options "SAMEORIGIN"
+    Header always set X-Content-Type-Options "nosniff"
+    Header always set X-XSS-Protection "1; mode=block"
+    Header always set Referrer-Policy "strict-origin-when-cross-origin"
+    Header always set Permissions-Policy "camera=(), microphone=(), geolocation=()"
+</IfModule>
+
+# ─── PHP ayarları (sadece mod_php ile çalışır, PHP-FPM'de IfModule ile atlanır) ──
+<IfModule mod_php8.c>
+    php_flag display_errors Off
+    php_flag log_errors On
+</IfModule>
+<IfModule mod_php.c>
+    php_flag display_errors Off
+    php_flag log_errors On
+</IfModule>
+
+# ─── Karakter seti ───────────────────────────────────────────────────────────
+AddDefaultCharset UTF-8
+
+# ─── MIME types ──────────────────────────────────────────────────────────────
+<IfModule mod_mime.c>
+    AddType application/javascript .js
+    AddType text/css .css
+    AddType image/svg+xml .svg
+</IfModule>
+
+# ─── Cache — statik dosyalar ─────────────────────────────────────────────────
+<IfModule mod_expires.c>
+    ExpiresActive On
+    ExpiresByType text/css "access plus 1 week"
+    ExpiresByType application/javascript "access plus 1 week"
+    ExpiresByType image/png "access plus 1 month"
+    ExpiresByType image/jpeg "access plus 1 month"
+    ExpiresByType image/svg+xml "access plus 1 month"
+</IfModule>

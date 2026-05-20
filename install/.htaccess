@@ -1,0 +1,21 @@
+# GO! Install — Dizin erişim kuralları
+# Root .htaccess'in front controller rewrite'ını bypass et
+
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteBase /install/
+
+    # step=1..6 parametreli istekler doğrudan index.php'ye
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteRule ^ index.php [QSA,L]
+</IfModule>
+
+# PHP hata görüntüleme — kurulum sırasında açık olsun
+<IfModule mod_php8.c>
+    php_flag display_errors On
+    php_flag log_errors On
+</IfModule>
+<IfModule mod_php.c>
+    php_flag display_errors On
+    php_flag log_errors On
+</IfModule>
