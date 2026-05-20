@@ -22,19 +22,19 @@ class QueueService
     public const STATUS_FAILED     = 'failed';
 
     /**
-     * Kuyruğa iş ekle.
+     * Kuyruğa iş ekle — hem statik hem instance çağrısını destekler.
      *
      * @param string $queue    Queue adı (email, export, vb.)
      * @param array  $payload  İş verisi
      * @param int    $delay    Saniye cinsinden gecikme (0 = hemen)
      * @return int|null        Job ID
      */
-    public function push(string $queue, array $payload, int $delay = 0): ?int
+    public static function push(string $queue, array $payload, int $delay = 0): ?int
     {
         try {
             $pdo = Database::connection();
 
-            $uuid        = $this->generateUuid();
+            $uuid        = self::generateUuidStatic();
             $availableAt = date('Y-m-d H:i:s', time() + $delay);
             $now         = date('Y-m-d H:i:s');
 
@@ -52,8 +52,8 @@ class QueueService
             ]);
 
             return (int)$pdo->lastInsertId();
-        } catch (\PDOException) {
-            // DB hazır değil — log yaz, sessizce geç
+        } catch (\Throwable) {
+            // DB hazır değil veya tablo yok — sessizce geç
             return null;
         }
     }
@@ -174,11 +174,16 @@ class QueueService
         } catch (\PDOException) {}
     }
 
-    private function generateUuid(): string
+    private static function generateUuidStatic(): string
     {
         $data    = random_bytes(16);
         $data[6] = chr(ord($data[6]) & 0x0f | 0x40);
         $data[8] = chr(ord($data[8]) & 0x3f | 0x80);
         return vsprintf('%s%s-%s-%s-%s-%s%s%s', str_split(bin2hex($data), 4));
+    }
+
+    private function generateUuid(): string
+    {
+        return self::generateUuidStatic();
     }
 }

@@ -86,9 +86,13 @@ class Router
         $fullClass = str_starts_with($class, 'GO\\') ? $class : 'GO\\Controllers\\' . $class;
 
         if (!class_exists($fullClass)) {
+            error_log("[GO Router] Controller bulunamadı: {$fullClass}");
             http_response_code(500);
             if (\GO\Core\App::isDebug()) {
                 echo "Controller bulunamadı: {$fullClass}";
+            } else {
+                $errorView = GO_ROOT . '/views/errors/500.php';
+                if (file_exists($errorView)) require $errorView;
             }
             return;
         }
@@ -96,9 +100,13 @@ class Router
         $controller = new $fullClass();
 
         if (!method_exists($controller, $method)) {
+            error_log("[GO Router] Method bulunamadı: {$fullClass}::{$method}");
             http_response_code(500);
             if (\GO\Core\App::isDebug()) {
                 echo "Method bulunamadı: {$fullClass}::{$method}";
+            } else {
+                $errorView = GO_ROOT . '/views/errors/500.php';
+                if (file_exists($errorView)) require $errorView;
             }
             return;
         }

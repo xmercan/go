@@ -167,6 +167,7 @@ class App
             'flash',
             'validation',
             'auth',
+            'app',
         ];
 
         foreach ($helpers as $helper) {
