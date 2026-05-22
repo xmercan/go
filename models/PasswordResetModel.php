@@ -8,7 +8,7 @@ class PasswordResetModel extends BaseModel
 {
     protected string $table = 'password_resets';
 
-    public function create(string $email): string
+    public function createToken(string $email): string
     {
         // Eski tokenları sil
         $this->execute("DELETE FROM password_resets WHERE email = ?", [$email]);

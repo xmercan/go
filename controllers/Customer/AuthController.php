@@ -170,7 +170,7 @@ class AuthController extends BaseController
         $user = $this->users->findByEmail($email);
 
         if ($user) {
-            $token = $this->resets->create($email);
+            $token = $this->resets->createToken($email);
             (new MailService())->queue($email, 'user_password_reset', [
                 'name'  => $user['full_name'],
                 'link'  => APP_URL . '/sifre-sifirla/' . $token,
